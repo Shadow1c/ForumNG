@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 using System.Text;
 
@@ -17,17 +18,33 @@ namespace ForumNG.Controllers
 		private readonly IConfiguration _configuration;
 		private readonly UserManager<IdentityUser> _userManager;
 		private readonly SignInManager<IdentityUser> _signInManager;
+		private readonly RoleManager<IdentityRole> _roleManager;
 
-		public AccountController(IConfiguration configuration, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+		public AccountController(IConfiguration configuration, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, RoleManager<IdentityRole> roleManager)
 		{
 			_configuration = configuration;
 			_userManager = userManager;
 			_signInManager = signInManager;
+			_roleManager = roleManager;
 		}
+
+		[HttpGet("AddRole")]
+		public async Task<IActionResult> AddRole()
+		{
+			if(!await _roleManager.RoleExistsAsync("User"))
+			{
+				await _roleManager.CreateAsync(new IdentityRole("User"));
+				await _roleManager.CreateAsync(new IdentityRole("Admin"));
+				return Ok();
+			}
+			return NotFound();
+		}
+
 
 		[HttpPost("login")]
 		public async Task<IActionResult> Login([FromBody] LoginModel model)
 		{
+			
 			var user = await _userManager.FindByEmailAsync(model.Login);
 			if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
 			{
@@ -56,16 +73,22 @@ namespace ForumNG.Controllers
 		[HttpPost("register")]
 		public async Task<IActionResult> Register([FromBody] LoginModel model)
 		{
+			
 			if (await _userManager.FindByEmailAsync(model.Login) != null)
 			{
 				return ValidationProblem();
 			}
+
 			var user = new IdentityUser { Email = model.Login, UserName = model.Login };
 			var result = await _userManager.CreateAsync(user, model.Password);
 
 			if (result.Succeeded)
 			{
-				return Ok();
+				if (user != null)
+				{
+					await _userManager.AddToRoleAsync(user, "User");
+					return Ok();
+				}
 			}
 
 			return BadRequest(result.Errors);
