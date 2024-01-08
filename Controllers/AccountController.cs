@@ -27,7 +27,7 @@ namespace ForumNG.Controllers
 			_signInManager = signInManager;
 			_roleManager = roleManager;
 		}
-
+		
 		[HttpGet("AddRole")]
 		public async Task<IActionResult> AddRole()
 		{
@@ -37,6 +37,7 @@ namespace ForumNG.Controllers
 				await _roleManager.CreateAsync(new IdentityRole("Admin"));
 				return Ok();
 			}
+
 			return NotFound();
 		}
 
@@ -46,24 +47,36 @@ namespace ForumNG.Controllers
 		{
 			
 			var user = await _userManager.FindByEmailAsync(model.Login);
+
 			if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
 			{
-				var claims = new[]
+				var roles = await _userManager.GetRolesAsync(user);
+
+				if (roles == null)
+				{
+					return NotFound("Error, User without role assigned! Contact with application Administrator.");
+				}
+
+				var claims = new List<Claim>
 				{
 					new Claim(ClaimTypes.NameIdentifier, user.UserName),
-					new Claim(ClaimTypes.Email, user.Email),
-					//new Claim(ClaimTypes.Role, user.)
+					new Claim(ClaimTypes.Email, user.Email)
+				
 				};
+
+				foreach (var role in roles)
+				{
+					claims.Add(new Claim(ClaimTypes.Role, role));
+				}
 
 				var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
 				var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
 				var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
 					_configuration["Jwt:Audience"],
 					claims,
-					expires: DateTime.Now.AddMinutes(30),
+					expires: DateTime.Now.AddDays(2),
 					signingCredentials: creds);
-
+				
 				return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
 			}
 
@@ -92,6 +105,47 @@ namespace ForumNG.Controllers
 			}
 
 			return BadRequest(result.Errors);
+		}
+
+		[HttpPost("role")]
+		public async Task<IActionResult> GetRole()
+		{
+			
+			var jwtToken = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+			var tokenHandler = new JwtSecurityTokenHandler();
+			var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
+
+			try
+			{
+				var principal = tokenHandler.ValidateToken(jwtToken, new TokenValidationParameters
+				{
+					ValidateIssuerSigningKey = true,
+					IssuerSigningKey = new SymmetricSecurityKey(key),
+					ValidateIssuer = false,
+					ValidateAudience = false,
+					ClockSkew = TimeSpan.Zero
+				}, out SecurityToken validatedToken);
+
+				var roleClaim = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
+
+				if (roleClaim == null)
+				{
+					return Unauthorized();
+				}
+
+				return Ok(new { role = roleClaim.Value });
+			}
+
+			catch (SecurityTokenExpiredException)
+			{
+				return Unauthorized("Token is expired");
+			}
+
+			catch (Exception)
+			{
+				return Unauthorized("Invalid token");
+			}
 		}
 	}
 }
