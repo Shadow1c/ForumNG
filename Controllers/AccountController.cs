@@ -76,7 +76,7 @@ namespace ForumNG.Controllers
 					claims,
 					expires: DateTime.Now.AddDays(2),
 					signingCredentials: creds);
-				
+
 				return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
 			}
 
@@ -142,9 +142,9 @@ namespace ForumNG.Controllers
 				return Unauthorized("Token is expired");
 			}
 
-			catch (Exception)
+			catch (Exception e)
 			{
-				return Unauthorized("Invalid token");
+				return Unauthorized("Invalid token" + e);
 			}
 		}
 	}
