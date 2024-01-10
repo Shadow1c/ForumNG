@@ -118,7 +118,8 @@ namespace ForumNG.Controllers
 			var tokenHandler = new JwtSecurityTokenHandler();
 			var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
 			var jwtJson = JObject.Parse(jwtToken);
-			var actualJwtToken = jwtJson["token"].ToString();
+			var token = jwtJson["token"];
+			var actualJwtToken = token != null ? token.ToString() : null;
 
 			try
 			{
