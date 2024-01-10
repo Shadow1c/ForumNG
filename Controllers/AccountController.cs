@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
@@ -110,15 +111,18 @@ namespace ForumNG.Controllers
 		[HttpPost("role")]
 		public async Task<IActionResult> GetRole()
 		{
-			
+
 			var jwtToken = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+			
 
 			var tokenHandler = new JwtSecurityTokenHandler();
 			var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
+			var jwtJson = JObject.Parse(jwtToken);
+			var actualJwtToken = jwtJson["token"].ToString();
 
 			try
 			{
-				var principal = tokenHandler.ValidateToken(jwtToken, new TokenValidationParameters
+				var principal = tokenHandler.ValidateToken(actualJwtToken, new TokenValidationParameters
 				{
 					ValidateIssuerSigningKey = true,
 					IssuerSigningKey = new SymmetricSecurityKey(key),
