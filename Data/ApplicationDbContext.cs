@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using ForumNG.Models.DTO;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,5 +12,8 @@ namespace ForumNG.Data
 
 		}
 		public DbSet<IdentityUser> Users { get; set; }
+		public DbSet<ForumTitle> Titles { get; set; }
+		public DbSet<ForumPost> Posts { get; set; }
+
 	}
 }

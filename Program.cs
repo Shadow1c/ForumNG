@@ -42,7 +42,6 @@ namespace ForumNG
 				.AddRoles<IdentityRole>()
 				.AddEntityFrameworkStores<ApplicationDbContext>();
 
-
 			// Dodaj konfiguracjê JWT Bearer
 			builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 			.AddJwtBearer(options =>
