@@ -1,11 +1,11 @@
-﻿using ForumNG.Models.DTO;
+﻿using ForumNG.Models.ForumModel;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace ForumNG.Data
 {
-	public class ApplicationDbContext : IdentityDbContext<IdentityUser>
+    public class ApplicationDbContext : IdentityDbContext<IdentityUser>
 	{
 		public ApplicationDbContext(DbContextOptions options) : base(options)
 		{

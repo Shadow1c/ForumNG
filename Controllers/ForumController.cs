@@ -1,5 +1,5 @@
 ﻿using ForumNG.Data;
-using ForumNG.Models.DTO;
+using ForumNG.Models.ForumModel;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +9,7 @@ using System.Collections.Generic;
 
 namespace ForumNG.Controllers
 {
-	[Route("[controller]")]
+    [Route("[controller]")]
 	[ApiController]
 	public class ForumController : ControllerBase
 	{
@@ -29,7 +29,7 @@ namespace ForumNG.Controllers
 		}
 
 		[HttpGet("Title/GetAll")]
-		public async Task<ActionResult<IEnumerable<ForumTitle>>> GetAll()
+		public async Task<ActionResult<IEnumerable<ForumTitle>>> GetAllTitle()
 		{
 			try
 			{
@@ -46,12 +46,12 @@ namespace ForumNG.Controllers
 			}
 		}
 
-		[HttpGet("Title/GetAll/limit/{limit}")]
-		public async Task<ActionResult<IEnumerable<ForumTitle>>> GetAll(int limit)
+		[HttpGet("Title/GetAll/limit/{limit}/{preset}")]
+		public async Task<ActionResult<IEnumerable<ForumTitle>>> GetAllTitle(int limit,int preset)
 		{
 			try
 			{
-				var result = await _context.Titles.Take(limit).ToListAsync();
+				var result = await _context.Titles.Take(limit).Skip(preset).ToListAsync();
 				if (result.Count == 0)
 				{
 					return NotFound();
@@ -64,8 +64,86 @@ namespace ForumNG.Controllers
 			}
 		}
 
+		[HttpGet("Title/{id}")]
+		public async Task<ActionResult<ForumTitle>> GetAllTitle(int id)
+		{
+			try
+			{
+				var result = await _context.Titles.FirstOrDefaultAsync(x => x.Id == id);
+				if (result == null)
+				{
+					return NotFound();
+				}
+				return Ok(result);
+			}
+			catch (Exception ex)
+			{
+				return Problem(ex.Message);
+			}
+		}
+
 		[HttpDelete("Title/Delete/{id}")]
-		public async Task<ActionResult> Delete(int id)
+		public async Task<ActionResult> DeleteTitle(int id)
+		{
+			try
+			{
+				var title = await _context.Titles.FindAsync(id);
+				if (title == null)
+				{
+					return NotFound();
+				}
+
+				_context.Titles.Remove(title);
+				await _context.SaveChangesAsync();
+
+				return Ok();
+			}
+			catch (Exception ex)
+			{
+				return Problem(ex.Message);
+			}
+		}
+
+		[HttpGet("Post/GetAll")]
+		public async Task<ActionResult<IEnumerable<ForumTitle>>> GetAllPost()
+		{
+			try
+			{
+				var result = await _context.Titles.ToListAsync();
+				if (result.Count == 0)
+				{
+					return NotFound();
+				}
+				
+
+				return Ok(result);
+			}
+			catch (Exception ex)
+			{
+				return Problem(ex.Message);
+			}
+		}
+
+		[HttpGet("Post/GetAll/{id}/limit/{limit}/{preset}")]
+		public async Task<ActionResult<IEnumerable<ForumTitle>>> GetAllPost(int id, int limit,int preset)
+		{
+			try
+			{
+				var result = await _context.Titles.Where(x => x.Id == id).Skip(preset).Take(limit).ToListAsync();
+				if (result.Count == 0)
+				{
+					return NotFound();
+				}
+				return Ok(result);
+			}
+			catch (Exception ex)
+			{
+				return Problem(ex.Message);
+			}
+		}
+
+		[HttpDelete("Post/Delete/{id}")]
+		public async Task<ActionResult> DeletePost(int id)
 		{
 			try
 			{
