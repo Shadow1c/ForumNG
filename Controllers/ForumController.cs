@@ -163,5 +163,27 @@ namespace ForumNG.Controllers
 				return Problem(ex.Message);
 			}
 		}
+
+		[HttpPost("Post/Post/{id}")]
+		public async Task<ActionResult> AddPost(int id,[FromBody] ForumPost post)
+		{
+			try
+			{
+				var title = await _context.Titles.FindAsync(id);
+				if (title == null)
+				{
+					return NotFound();
+				}
+
+				_context.Titles.Remove(title);
+				await _context.SaveChangesAsync();
+
+				return Ok();
+			}
+			catch (Exception ex)
+			{
+				return Problem(ex.Message);
+			}
+		}
 	}
 }
